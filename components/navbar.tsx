@@ -47,6 +47,8 @@ export function Navbar() {
     closeTimer.current = setTimeout(() => setMega(false), 140);
   };
 
+  if (pathname === "/login") return null;
+
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
       <div className="container-x pt-3 sm:pt-4">
@@ -104,7 +106,7 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link href="/features" className="btn-primary hidden px-5 py-2.5 md:inline-flex">
+            <Link href="/login" className="btn-primary hidden px-5 py-2.5 md:inline-flex">
               Sign Up
             </Link>
             <button
@@ -303,7 +305,7 @@ function MobileMenu({
             <Link href="/features" className="btn-primary w-full py-3">
               Start for free
             </Link>
-            <Link href="/features" className="btn-secondary w-full py-3">
+            <Link href="/login" className="btn-secondary w-full py-3">
               Sign Up
             </Link>
           </div>

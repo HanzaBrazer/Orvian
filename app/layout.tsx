@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { STIX_Two_Text, Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import { FooterGate } from "@/components/footer-gate";
 
 const stix = STIX_Two_Text({
   subsets: ["latin"],
@@ -53,12 +53,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${stix.variable} ${inter.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${stix.variable} ${inter.variable}`}
+    >
       <body className="font-sans antialiased">
         <div className="relative flex min-h-screen flex-col overflow-x-clip">
           <Navbar />
           <main className="flex-1">{children}</main>
-          <Footer />
+          <FooterGate />
         </div>
       </body>
     </html>
