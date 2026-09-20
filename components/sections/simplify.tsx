@@ -3,8 +3,12 @@ import { Check, MessageSquare, Folder } from "lucide-react";
 import { SectionHeading } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
 import { BarChart } from "@/components/dashboard/charts";
-import { IntegrationPill } from "@/components/brand-logos";
-import { integrations } from "@/lib/site";
+
+const integrationRows = [
+  ["dropbox", "slack", "spotify", "grammarly", "webflow"],
+  ["shopify", "notion", "mailchimp", "cloudflare", "asana"],
+  ["squarespace", "reddit", "paypal", "wix", "dropbox"],
+];
 
 const tabs = [
   { label: "All", count: 10 },
@@ -155,26 +159,28 @@ export function SimplifySection() {
 
         {/* Seamless Integration */}
         <Reveal delay={0.05} className="min-w-0 lg:col-span-2">
-          <FeatureCard
+          <PhotoFeatureCard
             title="Seamless Integration"
             desc="Seamless integration is a crucial aspect of a task management app, enhancing its functionality and user experience."
           >
-            <div className="flex flex-col gap-3 overflow-hidden">
-              {[0, 1].map((row) => (
+            <div className="flex flex-col gap-3 overflow-hidden py-1">
+              {integrationRows.map((rowLogos, row) => (
                 <div key={row} className="mask-fade-x overflow-hidden">
                   <div
                     className={`flex w-max items-center gap-3 ${
-                      row === 0 ? "animate-marquee" : "animate-marquee-slow"
-                    }`}
+                      row === 1
+                        ? "animate-marquee-slow"
+                        : "animate-marquee"
+                    } ${row === 1 ? "[animation-direction:reverse]" : ""}`}
                   >
-                    {[...integrations, ...integrations].map((name, i) => (
-                      <IntegrationPill key={`${row}-${name}-${i}`} name={name} />
+                    {[...rowLogos, ...rowLogos].map((name, i) => (
+                      <LogoPill key={`${row}-${name}-${i}`} name={name} />
                     ))}
                   </div>
                 </div>
               ))}
             </div>
-          </FeatureCard>
+          </PhotoFeatureCard>
         </Reveal>
       </div>
     </section>
@@ -226,5 +232,18 @@ function PhotoFeatureCard({
         <p className="mt-1.5 max-w-md text-sm leading-relaxed text-white/80">{desc}</p>
       </div>
     </div>
+  );
+}
+
+function LogoPill({ name }: { name: string }) {
+  return (
+    <span className="inline-flex shrink-0 items-center rounded-full border border-white/10 bg-white/[0.06] px-5 py-2.5 backdrop-blur-md">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`/integrations/${name}.svg`}
+        alt={name}
+        className="h-[18px] w-auto"
+      />
+    </span>
   );
 }
