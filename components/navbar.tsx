@@ -51,7 +51,9 @@ export function Navbar() {
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
       <div className="container-x pt-3 sm:pt-4">
         <div
-          className={`pointer-events-auto relative mx-auto flex items-center justify-between gap-3 rounded-full border px-2.5 py-2 pl-4 transition-all duration-300 ${
+          className={`pointer-events-auto relative mx-auto flex w-full items-center justify-between gap-3 rounded-full border px-2.5 py-2 pl-4 transition-all duration-500 ease-out ${
+            scrolled ? "md:max-w-[680px]" : "md:max-w-[960px]"
+          } ${
             scrolled || mega
               ? "border-white/10 bg-[#0e0e12]/80 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl"
               : "border-white/[0.07] bg-[#141418]/50 backdrop-blur-md"
