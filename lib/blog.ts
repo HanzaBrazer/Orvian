@@ -16,6 +16,8 @@ export type BlogPost = {
   readTime: string;
   image: string;
   body: Block[];
+  createdAt?: number; // set for CMS-created posts
+  custom?: boolean; // true for CMS-created posts
 };
 
 const guideBody: Block[] = [
