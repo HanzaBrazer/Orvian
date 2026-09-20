@@ -6,7 +6,7 @@ import { SimplifySection } from "@/components/sections/simplify";
 import { PricingSection } from "@/components/sections/pricing";
 import { TestimonialsSection } from "@/components/sections/testimonials";
 import { CtaSection } from "@/components/sections/cta";
-import { CTAButtons } from "@/components/ui";
+import { CTAButtons, TaglineBadge } from "@/components/ui";
 
 export default function HomePage() {
   return (
@@ -14,14 +14,7 @@ export default function HomePage() {
       <Hero
         image="/images/hero-home.jpg"
         withDashboard
-        badge={
-          <span className="chip">
-            <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-ink">
-              New
-            </span>
-            #1 Task Management App
-          </span>
-        }
+        badge={<TaglineBadge label="New">#1 Task Management App</TaglineBadge>}
         title={
           <>
             Boost Your Productivity With Orvian Task Management

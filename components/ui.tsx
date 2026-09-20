@@ -10,6 +10,32 @@ export function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Frosted-glass hero tagline: a "New" chip + gradient text, matching Figma. */
+export function TaglineBadge({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="inline-flex items-center gap-2 overflow-hidden rounded-[10px] border border-white/[0.08] bg-[rgba(34,34,40,0.5)] py-1 pl-1 pr-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-lg">
+      <span className="rounded-md bg-[#393946] px-2 py-0.5 text-sm font-medium text-[#d8dfff]">
+        {label}
+      </span>
+      <span
+        className="bg-clip-text text-sm text-transparent"
+        style={{
+          backgroundImage:
+            "linear-gradient(180deg, #ffffff 68%, #9ef7ff 99%, #7bd0ea 140%)",
+        }}
+      >
+        {children}
+      </span>
+    </div>
+  );
+}
+
 export function SectionHeading({
   eyebrow,
   title,

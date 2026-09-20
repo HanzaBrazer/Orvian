@@ -72,7 +72,7 @@ body {
   }
 
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-line-strong/60 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-muted backdrop-blur;
+    @apply inline-flex items-center gap-1.5 rounded-[10px] border border-white/[0.08] bg-[rgba(34,34,40,0.5)] px-3.5 py-1.5 text-sm font-medium text-[#d8dfff] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-lg;
   }
 
   .glass {
