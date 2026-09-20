@@ -40,7 +40,7 @@ const config: Config = {
       },
       fontFamily: {
         serif: ["var(--font-stix)", "Georgia", "serif"],
-        sans: ["var(--font-geist)", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
       borderRadius: {
         "4xl": "2rem",

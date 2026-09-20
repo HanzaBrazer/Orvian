@@ -18,7 +18,8 @@ html {
 body {
   background-color: #0c0c0f;
   color: #eeeef2;
-  font-feature-settings: "ss01", "cv01";
+  font-optical-sizing: auto;
+  letter-spacing: -0.011em;
   overflow-x: hidden;
 }
 

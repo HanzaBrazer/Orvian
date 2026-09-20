@@ -3,11 +3,7 @@ import { Phone } from "lucide-react";
 import { Reveal } from "@/components/reveal";
 
 export function Eyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-line-strong/60 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-muted backdrop-blur">
-      {children}
-    </span>
-  );
+  return <span className="chip">{children}</span>;
 }
 
 /** Frosted-glass hero tagline: a "New" chip + gradient text, matching Figma. */
