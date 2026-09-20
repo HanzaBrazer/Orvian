@@ -7,27 +7,19 @@ const partners = [
 ];
 
 export function TrustBar({ caption = true }: { caption?: boolean }) {
+  const row = [...partners, ...partners, ...partners];
   return (
-    <div className="flex flex-col items-center gap-6">
-      {/* Desktop / tablet: centered static row */}
-      <div className="hidden w-full flex-wrap items-center justify-center gap-x-6 gap-y-4 sm:flex lg:gap-x-12">
-        {partners.map((src, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={i}
-            src={src}
-            alt="Partner logo"
-            className="h-8 w-auto opacity-80 transition-opacity duration-300 hover:opacity-100 lg:h-9"
-          />
-        ))}
-      </div>
-
-      {/* Mobile: gentle marquee */}
-      <div className="mask-fade-x w-full overflow-hidden sm:hidden">
-        <div className="flex w-max animate-marquee items-center gap-8 pr-8">
-          {[...partners, ...partners].map((src, i) => (
+    <div className="flex flex-col items-center gap-7">
+      <div className="mask-fade-x w-full overflow-hidden">
+        <div className="flex w-max animate-marquee items-center gap-10 pr-10 sm:gap-16 sm:pr-16">
+          {row.map((src, i) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={src} alt="" className="h-8 w-auto opacity-80" />
+            <img
+              key={i}
+              src={src}
+              alt="Partner logo"
+              className="h-7 w-auto shrink-0 opacity-60 transition-opacity duration-300 hover:opacity-100 sm:h-8"
+            />
           ))}
         </div>
       </div>

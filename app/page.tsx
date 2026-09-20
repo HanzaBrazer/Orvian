@@ -20,7 +20,7 @@ export default function HomePage() {
             Boost Your Productivity With Orvian Task Management
           </>
         }
-        subtitle="Streamline your processes and empower your team with our products. Effortlessly manage tasks, data, and more in one centralized platform."
+        subtitle="Streamline HR processes and empower your team with our products. Effortlessly manage employee data, and more in one centralized platform."
       >
         <CTAButtons className="justify-center" />
       </Hero>
