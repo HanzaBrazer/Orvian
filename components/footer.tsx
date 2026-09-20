@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { footer } from "@/lib/site";
 import { SubscribeForm } from "@/components/subscribe-form";
+import { FooterAdmin } from "@/components/admin/footer-admin";
 
 export function Footer() {
   return (
@@ -71,9 +72,7 @@ export function Footer() {
             <Link href="#" className="text-xs link-muted">
               Terms
             </Link>
-            <Link href="#" className="text-xs link-muted">
-              Cookies
-            </Link>
+            <FooterAdmin />
           </div>
         </div>
       </div>

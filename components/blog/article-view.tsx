@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, CalendarDays, ArrowRight, Pencil } from "lucide-react";
 import type { BlogPost, Block } from "@/lib/blog";
 import { getMergedPost, getMergedPosts, CMS_EVENT } from "@/lib/cms";
+import { useAdmin } from "@/lib/auth";
 import { CmsEditor } from "@/components/blog/cms-editor";
 import { BlogCard } from "@/components/blog/blog-card";
 import { Reveal } from "@/components/reveal";
@@ -19,6 +20,7 @@ export function ArticleView({
   initialPost: BlogPost | null;
 }) {
   const router = useRouter();
+  const admin = useAdmin();
   const [post, setPost] = useState<BlogPost | null>(initialPost);
   const [recent, setRecent] = useState<BlogPost[]>([]);
   const [ready, setReady] = useState(false);
@@ -75,13 +77,15 @@ export function ArticleView({
                 Blog
               </Link>
             </nav>
-            <button
-              onClick={() => setEditing(true)}
-              className="btn-secondary shrink-0 px-4 py-2 text-sm"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              Edit
-            </button>
+            {admin && (
+              <button
+                onClick={() => setEditing(true)}
+                className="btn-secondary shrink-0 px-4 py-2 text-sm"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </button>
+            )}
           </div>
 
           <h1 className="display mt-6 text-balance text-4xl text-ink sm:text-5xl lg:text-[52px]">

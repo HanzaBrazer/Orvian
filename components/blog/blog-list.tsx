@@ -7,12 +7,14 @@ import { BlogCard } from "@/components/blog/blog-card";
 import { CmsEditor } from "@/components/blog/cms-editor";
 import { categories, type BlogPost } from "@/lib/blog";
 import { getMergedPosts, CMS_EVENT } from "@/lib/cms";
+import { useAdmin } from "@/lib/auth";
 
 export function BlogList() {
   const [active, setActive] = useState<(typeof categories)[number]>("All Articles");
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<BlogPost[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
+  const admin = useAdmin();
 
   useEffect(() => {
     const refresh = () => setItems(getMergedPosts());
@@ -65,13 +67,15 @@ export function BlogList() {
               className="w-full bg-transparent text-sm text-ink placeholder:text-faint focus:outline-none"
             />
           </div>
-          <button
-            onClick={() => setEditorOpen(true)}
-            className="btn-primary shrink-0 whitespace-nowrap px-4 py-2.5"
-          >
-            <Plus className="h-4 w-4" />
-            Add Article
-          </button>
+          {admin && (
+            <button
+              onClick={() => setEditorOpen(true)}
+              className="btn-primary shrink-0 whitespace-nowrap px-4 py-2.5"
+            >
+              <Plus className="h-4 w-4" />
+              Add Article
+            </button>
+          )}
         </div>
       </div>
 
