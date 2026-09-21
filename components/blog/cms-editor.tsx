@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Trash2, Check } from "lucide-react";
+import { X, Trash2, Check, UploadCloud, ImagePlus } from "lucide-react";
 import type { BlogPost, Category } from "@/lib/blog";
 import {
   upsertPost,
@@ -11,6 +11,7 @@ import {
   serializeBody,
   uniqueSlug,
   blogImages,
+  compressImage,
   todayDisplay,
 } from "@/lib/cms";
 
@@ -36,9 +37,41 @@ export function CmsEditor({
   const [category, setCategory] = useState<Category>("Business");
   const [excerpt, setExcerpt] = useState("");
   const [image, setImage] = useState(blogImages[0]);
+  const [imageName, setImageName] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [readTime, setReadTime] = useState("5 min read");
   const [bodyText, setBodyText] = useState("");
   const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file?: File | null) => {
+    if (!file) return;
+    setError("");
+    setUploading(true);
+    try {
+      const dataUrl = await compressImage(file);
+      setImage(dataUrl);
+      setImageName(file.name);
+    } catch (e) {
+      setError((e as Error).message || "Could not upload that image.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setImage("");
+    setImageName("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const imageLabel = image
+    ? imageName ||
+      (image.startsWith("data:")
+        ? "Uploaded image"
+        : image.split("/").pop() || "Cover image")
+    : "";
 
   useEffect(() => {
     if (!open) return;
@@ -57,6 +90,7 @@ export function CmsEditor({
       setReadTime("5 min read");
       setBodyText(emptyBodySample);
     }
+    setImageName("");
     setError("");
   }, [open, mode, post]);
 
@@ -194,15 +228,101 @@ export function CmsEditor({
                 />
               </Field>
 
-              <Field label="Cover image">
-                <div className="flex flex-wrap items-center gap-2">
+              <Field label="Cover image" hint="Upload a file, choose a preset, or paste a URL">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleFile(e.target.files?.[0])}
+                />
+
+                {image ? (
+                  /* Attachment preview with remove */
+                  <div className="flex items-center gap-3 rounded-2xl border border-line bg-white/[0.02] p-2.5">
+                    <span className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg border border-line">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={image}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-ink">
+                        {imageLabel}
+                      </p>
+                      <p className="text-xs text-faint">
+                        {image.startsWith("data:")
+                          ? "Uploaded · stored with the article"
+                          : "Cover image"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="shrink-0 rounded-full border border-line-strong/60 px-3 py-1.5 text-xs text-muted transition-colors hover:text-ink"
+                    >
+                      Replace
+                    </button>
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      aria-label="Remove image"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#ff8a6b]/30 text-[#ff8a6b] transition-colors hover:bg-[#ff8a6b]/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  /* Upload dropzone */
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragging(true);
+                    }}
+                    onDragLeave={() => setDragging(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragging(false);
+                      handleFile(e.dataTransfer.files?.[0]);
+                    }}
+                    className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-7 text-center transition-colors ${
+                      dragging
+                        ? "border-primary/60 bg-primary/5"
+                        : "border-line-strong/60 hover:border-primary/40 hover:bg-white/[0.02]"
+                    }`}
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-interactive text-primary">
+                      {uploading ? (
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary/40 border-t-primary" />
+                      ) : (
+                        <UploadCloud className="h-5 w-5" />
+                      )}
+                    </span>
+                    <span className="text-sm text-ink">
+                      {uploading ? "Processing…" : "Click to upload or drag & drop"}
+                    </span>
+                    <span className="text-xs text-faint">PNG, JPG, WEBP — up to ~5MB</span>
+                  </div>
+                )}
+
+                {/* presets + url */}
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="flex items-center gap-1 text-xs text-faint">
+                    <ImagePlus className="h-3.5 w-3.5" /> Presets
+                  </span>
                   {blogImages.map((src) => (
                     <button
                       key={src}
                       type="button"
-                      onClick={() => setImage(src)}
-                      className={`relative h-12 w-16 overflow-hidden rounded-lg border-2 transition-colors ${
-                        image === src ? "border-primary" : "border-transparent"
+                      onClick={() => {
+                        setImage(src);
+                        setImageName("");
+                      }}
+                      className={`relative h-10 w-14 overflow-hidden rounded-lg border-2 transition-colors ${
+                        image === src ? "border-primary" : "border-transparent hover:border-line-strong"
                       }`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -211,9 +331,12 @@ export function CmsEditor({
                   ))}
                 </div>
                 <input
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                  placeholder="/images/blog-business.jpg or https://…"
+                  value={image.startsWith("data:") ? "" : image}
+                  onChange={(e) => {
+                    setImage(e.target.value);
+                    setImageName("");
+                  }}
+                  placeholder="…or paste an image URL (https://…)"
                   className="input mt-2"
                 />
               </Field>
