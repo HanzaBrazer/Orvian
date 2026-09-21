@@ -1,23 +1,35 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Sparkles } from "lucide-react";
 import { BlogCard } from "@/components/blog/blog-card";
 import { CmsEditor } from "@/components/blog/cms-editor";
 import { categories, type BlogPost } from "@/lib/blog";
-import { getMergedPosts, CMS_EVENT } from "@/lib/cms";
+import {
+  fetchPosts,
+  seedDefaultPosts,
+  CMS_EVENT,
+  isSupabaseConfigured,
+} from "@/lib/cms";
 import { useAdmin } from "@/lib/auth";
 
 export function BlogList() {
   const [active, setActive] = useState<(typeof categories)[number]>("All Articles");
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const admin = useAdmin();
 
+  const refresh = useCallback(async () => {
+    const data = await fetchPosts();
+    setItems(data);
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
-    const refresh = () => setItems(getMergedPosts());
     refresh();
     window.addEventListener(CMS_EVENT, refresh);
     window.addEventListener("storage", refresh);
@@ -25,7 +37,7 @@ export function BlogList() {
       window.removeEventListener(CMS_EVENT, refresh);
       window.removeEventListener("storage", refresh);
     };
-  }, []);
+  }, [refresh]);
 
   const filtered = useMemo(() => {
     return items.filter((p) => {
@@ -37,6 +49,18 @@ export function BlogList() {
       return byCat && byQuery;
     });
   }, [items, active, query]);
+
+  const seed = async () => {
+    setSeeding(true);
+    try {
+      await seedDefaultPosts();
+      await refresh();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   return (
     <section className="container-x py-14 sm:py-16">
@@ -79,6 +103,26 @@ export function BlogList() {
         </div>
       </div>
 
+      {/* Admin seed helper (only when DB is configured but empty) */}
+      {admin && isSupabaseConfigured && !loading && items.length === 0 && (
+        <div className="mt-8 flex flex-col items-center justify-between gap-3 rounded-2xl border border-line bg-card p-5 text-center sm:flex-row sm:text-left">
+          <div>
+            <p className="text-sm font-semibold text-ink">Your blog is empty</p>
+            <p className="text-sm text-muted">
+              Seed the sample articles to get started, or add your own.
+            </p>
+          </div>
+          <button
+            onClick={seed}
+            disabled={seeding}
+            className="btn-secondary shrink-0 px-4 py-2.5 disabled:opacity-60"
+          >
+            <Sparkles className="h-4 w-4" />
+            {seeding ? "Seeding…" : "Seed sample articles"}
+          </button>
+        </div>
+      )}
+
       <motion.div
         layout
         className="mt-10 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3"
@@ -99,9 +143,9 @@ export function BlogList() {
         </AnimatePresence>
       </motion.div>
 
-      {filtered.length === 0 && (
+      {!loading && filtered.length === 0 && items.length > 0 && (
         <p className="mt-16 text-center text-muted">
-          No articles found. Try a different search or add a new one.
+          No articles found. Try a different search.
         </p>
       )}
 
@@ -109,7 +153,10 @@ export function BlogList() {
         mode="add"
         open={editorOpen}
         onClose={() => setEditorOpen(false)}
-        onSaved={() => setEditorOpen(false)}
+        onSaved={() => {
+          setEditorOpen(false);
+          refresh();
+        }}
       />
     </section>
   );

@@ -1,75 +1,143 @@
 import { posts as defaultPosts, type BlogPost, type Block } from "@/lib/blog";
+import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
 
-const KEY = "orvian-cms-v1";
+export { isSupabaseConfigured };
 export const CMS_EVENT = "orvian-cms-change";
 
-type Store = {
-  overrides: Record<string, BlogPost>;
-  deleted: string[];
+function emitChange() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(CMS_EVENT));
+  }
+}
+
+/* ---------- row <-> BlogPost mapping ---------- */
+
+type Row = {
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  category: string | null;
+  read_time: string | null;
+  image: string | null;
+  body: Block[] | null;
+  date: string | null;
+  created_at: string | null;
 };
 
-function read(): Store {
-  if (typeof window === "undefined") return { overrides: {}, deleted: [] };
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return { overrides: {}, deleted: [] };
-    const parsed = JSON.parse(raw);
-    return {
-      overrides: parsed.overrides ?? {},
-      deleted: parsed.deleted ?? [],
-    };
-  } catch {
-    return { overrides: {}, deleted: [] };
+function rowToPost(row: Row): BlogPost {
+  return {
+    slug: row.slug,
+    title: row.title,
+    excerpt: row.excerpt ?? "",
+    category: (row.category as BlogPost["category"]) ?? "Business",
+    date: row.date || todayDisplay(),
+    iso: (row.created_at ?? "").slice(0, 10),
+    readTime: row.read_time ?? "5 min read",
+    image: row.image ?? "",
+    body: Array.isArray(row.body) ? row.body : [],
+    createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+    custom: true,
+  };
+}
+
+function postToRow(post: BlogPost) {
+  return {
+    slug: post.slug,
+    title: post.title,
+    excerpt: post.excerpt,
+    category: post.category,
+    read_time: post.readTime,
+    image: post.image,
+    body: post.body,
+    date: post.date,
+  };
+}
+
+/* ---------- reads (fallback to defaults when Supabase not configured) ---------- */
+
+export async function fetchPosts(): Promise<BlogPost[]> {
+  const sb = getSupabase();
+  if (!sb) return [...defaultPosts];
+  const { data, error } = await sb
+    .from("posts")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("[cms] fetchPosts", error.message);
+    return [];
   }
+  return (data as Row[]).map(rowToPost);
 }
 
-function write(store: Store) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(KEY, JSON.stringify(store));
-    window.dispatchEvent(new Event(CMS_EVENT));
-  } catch {
-    /* storage unavailable — ignore */
+export async function fetchPost(slug: string): Promise<BlogPost | undefined> {
+  const sb = getSupabase();
+  if (!sb) return defaultPosts.find((p) => p.slug === slug);
+  const { data, error } = await sb
+    .from("posts")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) {
+    console.error("[cms] fetchPost", error.message);
+    return undefined;
   }
+  return data ? rowToPost(data as Row) : undefined;
 }
 
-export function getMergedPosts(): BlogPost[] {
-  const { overrides, deleted } = read();
-  const added = Object.values(overrides)
-    .filter((p) => !defaultPosts.some((d) => d.slug === p.slug))
-    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
-  const base = defaultPosts.map((d) => overrides[d.slug] ?? d);
-  return [...added, ...base].filter((p) => !deleted.includes(p.slug));
+/* ---------- writes (require Supabase + admin session) ---------- */
+
+export async function upsertPost(post: BlogPost): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) throw new Error("Supabase is not configured.");
+  const { error } = await sb
+    .from("posts")
+    .upsert(postToRow(post), { onConflict: "slug" });
+  if (error) throw new Error(error.message);
+  emitChange();
 }
 
-export function getMergedPost(slug: string): BlogPost | undefined {
-  return getMergedPosts().find((p) => p.slug === slug);
+export async function deletePost(slug: string): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) throw new Error("Supabase is not configured.");
+  const { error } = await sb.from("posts").delete().eq("slug", slug);
+  if (error) throw new Error(error.message);
+  emitChange();
 }
 
-export function isCustom(slug: string): boolean {
-  return !defaultPosts.some((d) => d.slug === slug);
+/* ---------- image storage ---------- */
+
+export async function uploadImage(blob: Blob): Promise<string> {
+  const sb = getSupabase();
+  if (!sb) throw new Error("Supabase is not configured.");
+  const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+  const { error } = await sb.storage
+    .from("blog-images")
+    .upload(name, blob, { contentType: "image/jpeg", upsert: false });
+  if (error) throw new Error(error.message);
+  const { data } = sb.storage.from("blog-images").getPublicUrl(name);
+  return data.publicUrl;
 }
 
-export function upsertPost(post: BlogPost) {
-  const store = read();
-  store.overrides[post.slug] = post;
-  store.deleted = store.deleted.filter((s) => s !== post.slug);
-  write(store);
+export async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
+  const res = await fetch(dataUrl);
+  return res.blob();
 }
 
-export function deletePost(slug: string) {
-  const store = read();
-  delete store.overrides[slug];
-  if (!store.deleted.includes(slug)) store.deleted.push(slug);
-  write(store);
+/** Seed the default sample articles (admin only). */
+export async function seedDefaultPosts(): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) throw new Error("Supabase is not configured.");
+  const rows = defaultPosts.map((p, i) => ({
+    ...postToRow(p),
+    // stagger created_at so ordering is stable
+    created_at: new Date(Date.now() - i * 60000).toISOString(),
+  }));
+  const { error } = await sb.from("posts").upsert(rows, { onConflict: "slug" });
+  if (error) throw new Error(error.message);
+  emitChange();
 }
 
-export function resetPost(slug: string) {
-  const store = read();
-  delete store.overrides[slug];
-  store.deleted = store.deleted.filter((s) => s !== slug);
-  write(store);
-}
+/* ---------- content <-> text helpers ---------- */
 
 export function slugify(s: string): string {
   const base = s
@@ -82,16 +150,8 @@ export function slugify(s: string): string {
 }
 
 export function uniqueSlug(title: string, existingSlug?: string): string {
-  const wanted = slugify(title);
-  if (existingSlug === wanted) return wanted;
-  const taken = new Set(getMergedPosts().map((p) => p.slug));
-  if (!taken.has(wanted)) return wanted;
-  let i = 2;
-  while (taken.has(`${wanted}-${i}`)) i++;
-  return `${wanted}-${i}`;
+  return existingSlug || slugify(title);
 }
-
-/* ---- Body <-> plain text ---- */
 
 export function parseBody(text: string): Block[] {
   const blocks: Block[] = [];
@@ -107,7 +167,6 @@ export function parseBody(text: string): Block[] {
     } else if (lines.length === 1 && lines[0].startsWith("## ")) {
       blocks.push({ type: "h2", text: lines[0].slice(3).trim() });
     } else if (lines[0].startsWith("## ")) {
-      // heading + following paragraph in same block
       blocks.push({ type: "h2", text: lines[0].slice(3).trim() });
       const rest = lines.slice(1).join(" ").trim();
       if (rest) blocks.push({ type: "p", text: rest });
@@ -131,13 +190,6 @@ export function serializeBody(blocks: Block[]): string {
     .join("\n\n");
 }
 
-export const blogImages = [
-  "/images/blog-business.jpg",
-  "/images/blog-management.jpg",
-  "/images/blog-analytics.jpg",
-];
-
-/** Read an image File, downscale it, and return a compressed data URL. */
 export function compressImage(
   file: File,
   maxW = 1280,

@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, CalendarDays, ArrowRight, Pencil } from "lucide-react";
 import type { BlogPost, Block } from "@/lib/blog";
-import { getMergedPost, getMergedPosts, CMS_EVENT } from "@/lib/cms";
+import { fetchPost, fetchPosts, CMS_EVENT } from "@/lib/cms";
 import { useAdmin } from "@/lib/auth";
 import { CmsEditor } from "@/components/blog/cms-editor";
 import { BlogCard } from "@/components/blog/blog-card";
@@ -27,15 +26,19 @@ export function ArticleView({
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
-    const refresh = () => {
-      setPost(getMergedPost(slug) ?? null);
-      setRecent(getMergedPosts().filter((p) => p.slug !== slug).slice(0, 3));
+    let mounted = true;
+    const refresh = async () => {
+      const [p, all] = await Promise.all([fetchPost(slug), fetchPosts()]);
+      if (!mounted) return;
+      setPost(p ?? null);
+      setRecent(all.filter((x) => x.slug !== slug).slice(0, 3));
       setReady(true);
     };
     refresh();
     window.addEventListener(CMS_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
+      mounted = false;
       window.removeEventListener(CMS_EVENT, refresh);
       window.removeEventListener("storage", refresh);
     };

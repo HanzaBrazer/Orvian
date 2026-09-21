@@ -11,6 +11,8 @@ import {
   serializeBody,
   uniqueSlug,
   compressImage,
+  uploadImage,
+  dataUrlToBlob,
   todayDisplay,
 } from "@/lib/cms";
 
@@ -42,6 +44,7 @@ export function CmsEditor({
   const [readTime, setReadTime] = useState("5 min read");
   const [bodyText, setBodyText] = useState("");
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file?: File | null) => {
@@ -105,36 +108,57 @@ export function CmsEditor({
     };
   }, [open, onClose]);
 
-  const save = () => {
+  const save = async () => {
     if (!title.trim()) {
       setError("Please add a title.");
       return;
     }
-    const slug =
-      mode === "edit" && post ? post.slug : uniqueSlug(title);
-    const body = parseBody(bodyText);
-    const iso = new Date().toISOString().slice(0, 10);
-    const next: BlogPost = {
-      slug,
-      title: title.trim(),
-      excerpt: excerpt.trim() || title.trim(),
-      category,
-      date: mode === "edit" && post ? post.date : todayDisplay(),
-      iso: mode === "edit" && post ? post.iso : iso,
-      readTime: readTime.trim() || "5 min read",
-      image,
-      body: body.length ? body : [{ type: "p", text: excerpt || title }],
-      createdAt: post?.createdAt ?? Date.now(),
-      custom: true,
-    };
-    upsertPost(next);
-    onSaved(slug);
+    setSaving(true);
+    setError("");
+    try {
+      // If the cover is a freshly uploaded data URL, push it to storage first.
+      let finalImage = image;
+      if (image.startsWith("data:")) {
+        const blob = await dataUrlToBlob(image);
+        finalImage = await uploadImage(blob);
+      }
+      const slug = mode === "edit" && post ? post.slug : uniqueSlug(title);
+      const body = parseBody(bodyText);
+      const iso = new Date().toISOString().slice(0, 10);
+      const next: BlogPost = {
+        slug,
+        title: title.trim(),
+        excerpt: excerpt.trim() || title.trim(),
+        category,
+        date: mode === "edit" && post ? post.date : todayDisplay(),
+        iso: mode === "edit" && post ? post.iso : iso,
+        readTime: readTime.trim() || "5 min read",
+        image: finalImage,
+        body: body.length ? body : [{ type: "p", text: excerpt || title }],
+        createdAt: post?.createdAt ?? Date.now(),
+        custom: true,
+      };
+      await upsertPost(next);
+      onSaved(slug);
+    } catch (e) {
+      setError((e as Error).message || "Could not save. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const remove = () => {
+  const remove = async () => {
     if (!post) return;
-    deletePost(post.slug);
-    onSaved(post.slug, true);
+    setSaving(true);
+    setError("");
+    try {
+      await deletePost(post.slug);
+      onSaved(post.slug, true);
+    } catch (e) {
+      setError((e as Error).message || "Could not delete.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -338,7 +362,8 @@ export function CmsEditor({
               {mode === "edit" ? (
                 <button
                   onClick={remove}
-                  className="inline-flex items-center gap-2 rounded-full border border-[#ff8a6b]/30 px-4 py-2.5 text-sm text-[#ff8a6b] transition-colors hover:bg-[#ff8a6b]/10"
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 rounded-full border border-[#ff8a6b]/30 px-4 py-2.5 text-sm text-[#ff8a6b] transition-colors hover:bg-[#ff8a6b]/10 disabled:opacity-60"
                 >
                   <Trash2 className="h-4 w-4" /> Delete
                 </button>
@@ -346,12 +371,28 @@ export function CmsEditor({
                 <span />
               )}
               <div className="flex items-center gap-2">
-                <button onClick={onClose} className="btn-ghost px-5 py-2.5">
+                <button
+                  onClick={onClose}
+                  disabled={saving}
+                  className="btn-ghost px-5 py-2.5 disabled:opacity-60"
+                >
                   Cancel
                 </button>
-                <button onClick={save} className="btn-primary px-5 py-2.5">
-                  <Check className="h-4 w-4" />
-                  {mode === "add" ? "Publish" : "Save changes"}
+                <button
+                  onClick={save}
+                  disabled={saving}
+                  className="btn-primary px-5 py-2.5 disabled:opacity-70"
+                >
+                  {saving ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-ink/40 border-t-primary-ink" />
+                  ) : (
+                    <Check className="h-4 w-4" />
+                  )}
+                  {saving
+                    ? "Saving…"
+                    : mode === "add"
+                    ? "Publish"
+                    : "Save changes"}
                 </button>
               </div>
             </div>

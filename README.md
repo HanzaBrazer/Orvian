@@ -77,3 +77,15 @@ public/images/          # optimized imagery
 ## 🖼 Imagery
 
 Photographic assets (hero landscapes, blog photos, avatars) are sourced from [Unsplash](https://unsplash.com/) to match the Figma scenes. All product/dashboard UI is recreated in code for crispness and animation.
+
+## 🗄 Supabase (CMS backend)
+
+The blog CMS can run on **Supabase** (database + admin auth + image storage). Without env vars it falls back to the built-in sample posts (read-only).
+
+1. Create a Supabase project.
+2. In the SQL Editor, run [`supabase/schema.sql`](supabase/schema.sql) (posts table, RLS, storage bucket).
+3. Authentication → Users → **Add user** (email + password) — this is your admin login.
+4. Copy `.env.example` → `.env.local` and fill in your **Project URL** and **anon public key** (Settings → API). Add the same vars in Vercel → Settings → Environment Variables.
+5. Redeploy. Sign in via **Sign Up** in the header, then use **Add Article** / **Edit** on the blog. Cover images upload to the `blog-images` storage bucket.
+
+> `NEXT_PUBLIC_SUPABASE_ANON_KEY` is public and safe to expose (protected by RLS). Never expose the `service_role` key.

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Lock,
-  User,
+  Mail,
   Eye,
   EyeOff,
   ArrowRight,
@@ -16,7 +16,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { Logo, LogoMark } from "@/components/logo";
-import { login, logout, useAdmin } from "@/lib/auth";
+import { signIn, logout, useAdmin, isSupabaseConfigured } from "@/lib/auth";
 
 const perks = [
   "Publish and edit blog articles in seconds",
@@ -27,26 +27,24 @@ const perks = [
 export default function LoginPage() {
   const router = useRouter();
   const admin = useAdmin();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = "";
   }, []);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(false);
-    setTimeout(() => {
-      const ok = login(username, password);
-      setLoading(false);
-      if (ok) router.push("/blog");
-      else setError(true);
-    }, 500);
+    setError("");
+    const res = await signIn(email, password);
+    setLoading(false);
+    if (res.ok) router.push("/blog");
+    else setError(res.error || "Incorrect email or password.");
   };
 
   return (
@@ -127,18 +125,19 @@ export default function LoginPage() {
               <form onSubmit={submit} className="mt-8 flex flex-col gap-3.5">
                 <label className="block">
                   <span className="mb-1.5 block text-xs font-medium text-muted">
-                    Username
+                    Email
                   </span>
                   <span className="flex items-center gap-2.5 rounded-2xl border border-line bg-white/[0.02] px-3.5 focus-within:border-primary/50">
-                    <User className="h-4 w-4 shrink-0 text-faint" />
+                    <Mail className="h-4 w-4 shrink-0 text-faint" />
                     <input
-                      value={username}
+                      type="email"
+                      value={email}
                       onChange={(e) => {
-                        setUsername(e.target.value);
-                        setError(false);
+                        setEmail(e.target.value);
+                        setError("");
                       }}
                       autoFocus
-                      placeholder="admin"
+                      placeholder="you@example.com"
                       className="w-full bg-transparent py-3 text-sm text-ink placeholder:text-faint focus:outline-none"
                     />
                   </span>
@@ -155,7 +154,7 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
-                        setError(false);
+                        setError("");
                       }}
                       placeholder="••••••••"
                       className="w-full bg-transparent py-3 text-sm text-ink placeholder:text-faint focus:outline-none"
@@ -171,11 +170,7 @@ export default function LoginPage() {
                   </span>
                 </label>
 
-                {error && (
-                  <p className="text-sm text-[#ff8a6b]">
-                    Incorrect username or password.
-                  </p>
-                )}
+                {error && <p className="text-sm text-[#ff8a6b]">{error}</p>}
 
                 <button
                   type="submit"
@@ -194,9 +189,9 @@ export default function LoginPage() {
 
               <div className="mt-6 rounded-2xl border border-white/5 bg-white/[0.02] p-3.5 text-center">
                 <p className="text-[12px] leading-relaxed text-faint">
-                  Demo admin — username{" "}
-                  <span className="font-medium text-muted">admin</span> · password{" "}
-                  <span className="font-medium text-muted">orvian2026</span>
+                  {isSupabaseConfigured
+                    ? "Use the admin email & password created in your Supabase project."
+                    : "Supabase is not configured yet — add your environment variables to enable admin login."}
                 </p>
               </div>
             </>
