@@ -105,12 +105,16 @@ export function ArticleView({
         </div>
 
         <div className="relative mx-auto mt-10 aspect-[16/9] max-w-4xl overflow-hidden rounded-3xl border border-line">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={post.image}
-            alt={post.title}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+          {post.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={post.image}
+              alt={post.title}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-interactive2 via-card to-surface" />
+          )}
           <span className="absolute left-4 top-4 rounded-lg bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">
             {post.category}
           </span>

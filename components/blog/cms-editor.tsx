@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Trash2, Check, UploadCloud, ImagePlus } from "lucide-react";
+import { X, Trash2, Check, UploadCloud } from "lucide-react";
 import type { BlogPost, Category } from "@/lib/blog";
 import {
   upsertPost,
@@ -10,7 +10,6 @@ import {
   parseBody,
   serializeBody,
   uniqueSlug,
-  blogImages,
   compressImage,
   todayDisplay,
 } from "@/lib/cms";
@@ -36,7 +35,7 @@ export function CmsEditor({
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Category>("Business");
   const [excerpt, setExcerpt] = useState("");
-  const [image, setImage] = useState(blogImages[0]);
+  const [image, setImage] = useState("");
   const [imageName, setImageName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -86,7 +85,7 @@ export function CmsEditor({
       setTitle("");
       setCategory("Business");
       setExcerpt("");
-      setImage(blogImages[0]);
+      setImage("");
       setReadTime("5 min read");
       setBodyText(emptyBodySample);
     }
@@ -308,28 +307,6 @@ export function CmsEditor({
                   </div>
                 )}
 
-                {/* presets + url */}
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="flex items-center gap-1 text-xs text-faint">
-                    <ImagePlus className="h-3.5 w-3.5" /> Presets
-                  </span>
-                  {blogImages.map((src) => (
-                    <button
-                      key={src}
-                      type="button"
-                      onClick={() => {
-                        setImage(src);
-                        setImageName("");
-                      }}
-                      className={`relative h-10 w-14 overflow-hidden rounded-lg border-2 transition-colors ${
-                        image === src ? "border-primary" : "border-transparent hover:border-line-strong"
-                      }`}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={src} alt="" className="h-full w-full object-cover" />
-                    </button>
-                  ))}
-                </div>
                 <input
                   value={image.startsWith("data:") ? "" : image}
                   onChange={(e) => {
@@ -337,7 +314,7 @@ export function CmsEditor({
                     setImageName("");
                   }}
                   placeholder="…or paste an image URL (https://…)"
-                  className="input mt-2"
+                  className="input mt-3"
                 />
               </Field>
 
