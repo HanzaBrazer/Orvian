@@ -1,5 +1,7 @@
 export type Category = "Business" | "Analytics" | "Management";
 
+export type PostStatus = "draft" | "published";
+
 export type Block =
   | { type: "p"; text: string }
   | { type: "h2"; text: string }
@@ -16,7 +18,12 @@ export type BlogPost = {
   readTime: string;
   image: string;
   body: Block[];
+  status?: PostStatus; // defaults to "published"
+  tags?: string[];
+  seoTitle?: string;
+  seoDescription?: string;
   createdAt?: number; // set for CMS-created posts
+  updatedAt?: number;
   custom?: boolean; // true for CMS-created posts
 };
 

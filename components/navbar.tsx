@@ -47,7 +47,7 @@ export function Navbar() {
     closeTimer.current = setTimeout(() => setMega(false), 140);
   };
 
-  if (pathname === "/login") return null;
+  if (pathname === "/login" || pathname.startsWith("/admin")) return null;
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">

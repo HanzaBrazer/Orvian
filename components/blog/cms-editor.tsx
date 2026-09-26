@@ -197,7 +197,7 @@ export function CmsEditor({
                 aria-label="Close"
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-line-strong/60 bg-interactive/60 text-ink hover:bg-interactive2"
               >
-                <X className="h-4.5 w-4.5" />
+                <X className="h-[18px] w-[18px]" />
               </button>
             </div>
 

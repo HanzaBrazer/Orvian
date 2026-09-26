@@ -11,10 +11,20 @@ create table if not exists public.posts (
   read_time text default '5 min read',
   image text default '',
   body jsonb not null default '[]'::jsonb,
+  status text not null default 'published',
+  tags text[] default '{}',
+  seo_title text default '',
+  seo_description text default '',
   date text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- If you already created the table earlier, add the new columns:
+alter table public.posts add column if not exists status text not null default 'published';
+alter table public.posts add column if not exists tags text[] default '{}';
+alter table public.posts add column if not exists seo_title text default '';
+alter table public.posts add column if not exists seo_description text default '';
 
 -- keep updated_at fresh
 create or replace function public.set_updated_at()

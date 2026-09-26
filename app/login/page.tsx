@@ -43,7 +43,7 @@ export default function LoginPage() {
     setError("");
     const res = await signIn(email, password);
     setLoading(false);
-    if (res.ok) router.push("/blog");
+    if (res.ok) router.push("/admin");
     else setError(res.error || "Incorrect email or password.");
   };
 
@@ -106,7 +106,7 @@ export default function LoginPage() {
           </div>
 
           {admin ? (
-            <SignedIn onGo={() => router.push("/blog")} />
+            <SignedIn onGo={() => router.push("/admin")} />
           ) : (
             <>
               <div className="flex flex-col items-center text-center lg:items-start lg:text-left">

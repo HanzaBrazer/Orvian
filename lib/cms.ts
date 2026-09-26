@@ -20,8 +20,13 @@ type Row = {
   read_time: string | null;
   image: string | null;
   body: Block[] | null;
+  status: string | null;
+  tags: string[] | null;
+  seo_title: string | null;
+  seo_description: string | null;
   date: string | null;
   created_at: string | null;
+  updated_at: string | null;
 };
 
 function rowToPost(row: Row): BlogPost {
@@ -35,7 +40,12 @@ function rowToPost(row: Row): BlogPost {
     readTime: row.read_time ?? "5 min read",
     image: row.image ?? "",
     body: Array.isArray(row.body) ? row.body : [],
+    status: (row.status as BlogPost["status"]) ?? "published",
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    seoTitle: row.seo_title ?? "",
+    seoDescription: row.seo_description ?? "",
     createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+    updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : undefined,
     custom: true,
   };
 }
@@ -49,24 +59,55 @@ function postToRow(post: BlogPost) {
     read_time: post.readTime,
     image: post.image,
     body: post.body,
+    status: post.status ?? "published",
+    tags: post.tags ?? [],
+    seo_title: post.seoTitle ?? "",
+    seo_description: post.seoDescription ?? "",
     date: post.date,
   };
 }
 
 /* ---------- reads (fallback to defaults when Supabase not configured) ---------- */
 
-export async function fetchPosts(): Promise<BlogPost[]> {
+/** All posts (admin) — includes drafts. */
+export async function fetchAllPosts(): Promise<BlogPost[]> {
   const sb = getSupabase();
   if (!sb) return [...defaultPosts];
   const { data, error } = await sb
     .from("posts")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("updated_at", { ascending: false });
   if (error) {
-    console.error("[cms] fetchPosts", error.message);
+    console.error("[cms] fetchAllPosts", error.message);
     return [];
   }
   return (data as Row[]).map(rowToPost);
+}
+
+/** Published posts only (public site). */
+export async function fetchPosts(): Promise<BlogPost[]> {
+  const all = await fetchAllPosts();
+  return all.filter((p) => (p.status ?? "published") === "published");
+}
+
+export type CmsStats = {
+  total: number;
+  published: number;
+  drafts: number;
+  categories: number;
+};
+
+export async function fetchStats(): Promise<CmsStats> {
+  const all = await fetchAllPosts();
+  const published = all.filter((p) => (p.status ?? "published") === "published");
+  const drafts = all.filter((p) => p.status === "draft");
+  const categories = new Set(all.map((p) => p.category));
+  return {
+    total: all.length,
+    published: published.length,
+    drafts: drafts.length,
+    categories: categories.size,
+  };
 }
 
 export async function fetchPost(slug: string): Promise<BlogPost | undefined> {
