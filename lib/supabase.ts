@@ -1,7 +1,13 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Public project credentials. The anon/publishable key is safe to expose
+// (it is embedded in the client bundle anyway and protected by RLS).
+// Environment variables override these when provided.
+const FALLBACK_URL = "https://vruxhhrnlwqcmoxibhpy.supabase.co";
+const FALLBACK_ANON = "sb_publishable_NhNOQxyRWPQ9yjZrzTlYRQ_dEJn4Izd";
+
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || FALLBACK_URL;
+const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || FALLBACK_ANON;
 
 export const isSupabaseConfigured = Boolean(url && anon);
 
