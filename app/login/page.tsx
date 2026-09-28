@@ -16,7 +16,13 @@ import {
   LogOut,
 } from "lucide-react";
 import { Logo, LogoMark } from "@/components/logo";
-import { signIn, logout, useAdmin, isSupabaseConfigured } from "@/lib/auth";
+import {
+  signIn,
+  signUp,
+  logout,
+  useAuthState,
+  isAdminEmail,
+} from "@/lib/auth";
 
 const perks = [
   "Publish and edit blog articles in seconds",
@@ -26,24 +32,46 @@ const perks = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const admin = useAdmin();
+  const { user, admin } = useAuthState();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = "";
   }, []);
 
+  const dest = (mail: string) => (isAdminEmail(mail) ? "/admin" : "/");
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setNotice("");
+    if (mode === "signup") {
+      const res = await signUp(email, password);
+      setLoading(false);
+      if (!res.ok) {
+        setError(res.error || "Could not create your account.");
+        return;
+      }
+      if (res.needsConfirm) {
+        setNotice(
+          "Account created. Please check your email to confirm, then sign in."
+        );
+        setMode("signin");
+        return;
+      }
+      router.push(dest(email));
+      return;
+    }
     const res = await signIn(email, password);
     setLoading(false);
-    if (res.ok) router.push("/admin");
+    if (res.ok) router.push(dest(email));
     else setError(res.error || "Incorrect email or password.");
   };
 
@@ -105,8 +133,8 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          {admin ? (
-            <SignedIn onGo={() => router.push("/admin")} />
+          {user ? (
+            <SignedIn admin={admin} onGo={() => router.push(admin ? "/admin" : "/")} />
           ) : (
             <>
               <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
@@ -116,9 +144,13 @@ export default function LoginPage() {
                     <ShieldCheck className="h-3 w-3" />
                   </span>
                 </span>
-                <h2 className="display text-3xl text-ink sm:text-4xl">Sign in</h2>
+                <h2 className="display text-3xl text-ink sm:text-4xl">
+                  {mode === "signup" ? "Create your account" : "Sign in"}
+                </h2>
                 <p className="mt-2 text-sm text-muted">
-                  Access the Orvian dashboard to manage your blog.
+                  {mode === "signup"
+                    ? "Sign up to follow the Orvian blog."
+                    : "Sign in to your Orvian account."}
                 </p>
               </div>
 
@@ -171,6 +203,7 @@ export default function LoginPage() {
                 </label>
 
                 {error && <p className="text-sm text-[#ff8a6b]">{error}</p>}
+                {notice && <p className="text-sm text-success">{notice}</p>}
 
                 <button
                   type="submit"
@@ -181,19 +214,44 @@ export default function LoginPage() {
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-ink/40 border-t-primary-ink" />
                   ) : (
                     <>
-                      Sign in <ArrowRight className="h-4 w-4" />
+                      {mode === "signup" ? "Create account" : "Sign in"}
+                      <ArrowRight className="h-4 w-4" />
                     </>
                   )}
                 </button>
               </form>
 
-              <div className="mt-6 rounded-2xl border border-white/5 bg-white/[0.02] p-3.5 text-center">
-                <p className="text-[12px] leading-relaxed text-faint">
-                  {isSupabaseConfigured
-                    ? "Use the admin email & password created in your Supabase project."
-                    : "Supabase is not configured yet — add your environment variables to enable admin login."}
-                </p>
-              </div>
+              <p className="mt-6 text-center text-sm text-muted">
+                {mode === "signup" ? (
+                  <>
+                    Already have an account?{" "}
+                    <button
+                      onClick={() => {
+                        setMode("signin");
+                        setError("");
+                        setNotice("");
+                      }}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      Sign in
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Don&apos;t have an account?{" "}
+                    <button
+                      onClick={() => {
+                        setMode("signup");
+                        setError("");
+                        setNotice("");
+                      }}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      Create one
+                    </button>
+                  </>
+                )}
+              </p>
             </>
           )}
         </motion.div>
@@ -202,7 +260,7 @@ export default function LoginPage() {
   );
 }
 
-function SignedIn({ onGo }: { onGo: () => void }) {
+function SignedIn({ admin, onGo }: { admin: boolean; onGo: () => void }) {
   return (
     <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
       <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
@@ -210,11 +268,13 @@ function SignedIn({ onGo }: { onGo: () => void }) {
       </span>
       <h2 className="display text-3xl text-ink sm:text-4xl">You&apos;re signed in</h2>
       <p className="mt-2 text-sm text-muted">
-        You have admin access. Head to the blog to add or edit articles.
+        {admin
+          ? "You have admin access. Head to the dashboard to manage the blog."
+          : "You're signed in as a reader. Explore the Orvian blog."}
       </p>
       <div className="mt-7 flex w-full flex-col gap-2.5">
         <button onClick={onGo} className="btn-primary w-full py-3">
-          Go to Blog dashboard <ArrowRight className="h-4 w-4" />
+          {admin ? "Go to Dashboard" : "Go to Home"} <ArrowRight className="h-4 w-4" />
         </button>
         <button onClick={logout} className="btn-secondary w-full py-3">
           <LogOut className="h-4 w-4" /> Log out

@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { useAuthState, logout } from "@/lib/auth";
-import { getSupabase } from "@/lib/supabase";
 
 type NavItem = { label: string; href: string; icon: React.ElementType };
 const groups: { title: string; items: NavItem[] }[] = [
@@ -61,22 +60,18 @@ function pageTitle(pathname: string) {
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { admin, ready } = useAuthState();
+  const { user, admin, email, ready } = useAuthState();
   const [drawer, setDrawer] = useState(false);
-  const [email, setEmail] = useState<string>("");
 
   useEffect(() => {
-    if (ready && !admin) router.replace("/login");
-  }, [ready, admin, router]);
+    if (!ready) return;
+    if (!user) router.replace("/login"); // not signed in
+    else if (!admin) router.replace("/"); // signed in but not an admin
+  }, [ready, user, admin, router]);
 
   useEffect(() => {
     setDrawer(false);
   }, [pathname]);
-
-  useEffect(() => {
-    const sb = getSupabase();
-    sb?.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
-  }, [admin]);
 
   if (!ready || !admin) {
     return (
