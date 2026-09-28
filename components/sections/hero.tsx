@@ -57,7 +57,7 @@ export function Hero({
 
         {withDashboard && (
           <HeroDashboardReveal>
-            <div className="relative mt-14 hidden w-full max-w-4xl md:block">
+            <div className="relative mx-auto mt-14 hidden w-full max-w-4xl md:block">
               <div className="pointer-events-none absolute -inset-6 rounded-[40px] bg-primary/10 blur-3xl" />
               <div className="relative">
                 <HeroDashboard />
