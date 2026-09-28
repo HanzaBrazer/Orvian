@@ -122,15 +122,23 @@ export function Navbar() {
           <AnimatePresence>
             {mega && (
               <motion.div
+                key="mega-pos"
                 onMouseEnter={openMega}
                 onMouseLeave={scheduleClose}
-                initial={{ opacity: 0, y: 10, scale: 0.985, x: "-50%" }}
-                animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
-                exit={{ opacity: 0, y: 8, scale: 0.985, x: "-50%" }}
-                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute left-1/2 top-[calc(100%+12px)] hidden w-[860px] max-w-[92vw] md:block"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+                className="absolute left-1/2 top-[calc(100%+12px)] hidden w-[860px] max-w-[92vw] -translate-x-1/2 md:block"
               >
-                <MegaPanel />
+                <motion.div
+                  initial={{ y: 10, scale: 0.985 }}
+                  animate={{ y: 0, scale: 1 }}
+                  exit={{ y: 8, scale: 0.985 }}
+                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <MegaPanel />
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
