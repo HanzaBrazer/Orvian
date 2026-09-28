@@ -124,11 +124,11 @@ export function Navbar() {
               <motion.div
                 onMouseEnter={openMega}
                 onMouseLeave={scheduleClose}
-                initial={{ opacity: 0, y: 10, scale: 0.985 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 8, scale: 0.985 }}
+                initial={{ opacity: 0, y: 10, scale: 0.985, x: "-50%" }}
+                animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
+                exit={{ opacity: 0, y: 8, scale: 0.985, x: "-50%" }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute left-1/2 top-[calc(100%+12px)] hidden w-[860px] max-w-[92vw] -translate-x-1/2 md:block"
+                className="absolute left-1/2 top-[calc(100%+12px)] hidden w-[860px] max-w-[92vw] md:block"
               >
                 <MegaPanel />
               </motion.div>
