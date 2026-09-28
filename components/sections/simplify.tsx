@@ -151,7 +151,7 @@ export function SimplifySection() {
             title="Progress Tracking"
             desc="Progress tracking is a crucial feature in a task management app as it allows users."
           >
-            <div className="rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur-sm">
+            <div className="rounded-2xl border border-white/15 bg-white/[0.08] p-4 backdrop-blur-md">
               <BarChart />
             </div>
           </PhotoFeatureCard>
@@ -225,7 +225,7 @@ function PhotoFeatureCard({
         sizes="(max-width:1024px) 100vw, 500px"
         className="object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/85" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/25 to-black/80" />
       <div className="relative flex-1">{children}</div>
       <div className="relative mt-6">
         <h3 className="text-lg font-semibold text-white">{title}</h3>
@@ -237,7 +237,7 @@ function PhotoFeatureCard({
 
 function LogoPill({ name }: { name: string }) {
   return (
-    <span className="inline-flex shrink-0 items-center rounded-full border border-white/10 bg-white/[0.06] px-5 py-2.5 backdrop-blur-md">
+    <span className="inline-flex shrink-0 items-center rounded-full border border-white/15 bg-white/[0.1] px-5 py-2.5 backdrop-blur-md">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`/integrations/${name}.svg`}
