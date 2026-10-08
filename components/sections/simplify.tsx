@@ -45,12 +45,13 @@ export function SimplifySection() {
       <div className="mt-12 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-2">
         {/* Create Unlimited Task */}
         <Reveal>
-          <FeatureCard
+          <PhotoFeatureCard
             title="Create Unlimited Task"
             desc="Progress tracking is a crucial feature in a task management app as it allows users to stay on top of every deliverable."
+            image="/images/feature-dusk.png"
           >
-            <div className="rounded-2xl border border-line bg-surface/80 p-4">
-              <div className="no-scrollbar flex items-center gap-4 overflow-x-auto border-b border-line pb-3 text-sm">
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-md">
+              <div className="no-scrollbar flex items-center gap-4 overflow-x-auto border-b border-white/10 pb-3 text-sm">
                 {tabs.map((t) => (
                   <span
                     key={t.label}
@@ -93,7 +94,7 @@ export function SimplifySection() {
                 ))}
               </ul>
             </div>
-          </FeatureCard>
+          </PhotoFeatureCard>
         </Reveal>
 
         {/* Collaborate on Tasks */}
@@ -101,6 +102,7 @@ export function SimplifySection() {
           <PhotoFeatureCard
             title="Collaborate on Tasks"
             desc="Bring the right people together and move work forward with shared context."
+            image="/images/feature-day.webp"
           >
             <div className="relative h-full min-h-[220px]">
               {collaborators.map((c) => (
@@ -150,6 +152,7 @@ export function SimplifySection() {
           <PhotoFeatureCard
             title="Progress Tracking"
             desc="Progress tracking is a crucial feature in a task management app as it allows users."
+            image="/images/feature-overcast.png"
           >
             <div className="rounded-2xl border border-white/15 bg-white/[0.08] p-4 backdrop-blur-md">
               <BarChart />
@@ -162,6 +165,7 @@ export function SimplifySection() {
           <PhotoFeatureCard
             title="Seamless Integration"
             desc="Seamless integration is a crucial aspect of a task management app, enhancing its functionality and user experience."
+            image="/images/feature-golden.png"
           >
             <div className="flex flex-col gap-3 overflow-hidden py-1">
               {integrationRows.map((rowLogos, row) => (
@@ -187,39 +191,21 @@ export function SimplifySection() {
   );
 }
 
-function FeatureCard({
-  title,
-  desc,
-  children,
-}: {
-  title: string;
-  desc: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex h-full min-w-0 flex-col gap-6 rounded-3xl border border-line bg-card p-5 sm:p-6">
-      <div className="min-w-0 flex-1">{children}</div>
-      <div>
-        <h3 className="text-lg font-semibold text-ink">{title}</h3>
-        <p className="mt-1.5 max-w-md text-sm leading-relaxed text-muted">{desc}</p>
-      </div>
-    </div>
-  );
-}
-
 function PhotoFeatureCard({
   title,
   desc,
+  image,
   children,
 }: {
   title: string;
   desc: string;
+  image: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="relative flex h-full min-h-[320px] flex-col justify-between overflow-hidden rounded-3xl border border-line p-5 sm:p-6">
       <Image
-        src="/images/hills.jpg"
+        src={image}
         alt=""
         fill
         sizes="(max-width:1024px) 100vw, 500px"
